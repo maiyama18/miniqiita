@@ -81,46 +81,8 @@ func TestClient_GetUserItems(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-				if req.Method != tc.expectedMethod {
-					t.Fatalf("request method wrong. want=%s, got=%s", tc.expectedMethod, req.Method)
-				}
-				if req.URL.Path != tc.expectedRequestPath {
-					t.Fatalf("request path wrong. want=%s, got=%s", tc.expectedRequestPath, req.URL.Path)
-				}
-				if req.URL.RawQuery != tc.expectedRawQuery {
-					t.Fatalf("request query wrong. want=%s, got=%s", tc.expectedRawQuery, req.URL.RawQuery)
-				}
-
-				headerBytes, err := ioutil.ReadFile(tc.mockResponseHeaderFile)
-				if err != nil {
-					t.Fatalf("failed to read header '%s': %s", tc.mockResponseHeaderFile, err.Error())
-				}
-				firstLine := strings.Split(string(headerBytes), "\n")[0]
-				statusCode, err := strconv.Atoi(strings.Fields(firstLine)[1])
-				if err != nil {
-					t.Fatalf("failed to extract status code from header: %s", err.Error())
-				}
-				w.WriteHeader(statusCode)
-
-				bodyBytes, err := ioutil.ReadFile(tc.mockResponseBodyFile)
-				if err != nil {
-					t.Fatalf("failed to read body '%s': %s", tc.mockResponseBodyFile, err.Error())
-				}
-				w.Write(bodyBytes)
-			}))
-			defer server.Close()
-
-			serverURL, err := url.Parse(server.URL)
-			if err != nil {
-				t.Fatalf("failed to get mock server URL: %s", err.Error())
-			}
-
-			cli := &Client{
-				BaseURL:    serverURL,
-				HTTPClient: server.Client(),
-				Logger:     nil,
-			}
+			cli, teardown := setup(t, tc.mockResponseHeaderFile, tc.mockResponseBodyFile, tc.expectedMethod, tc.expectedRequestPath, tc.expectedRawQuery)
+			defer teardown()
 
 			items, err := cli.GetUserItems(context.Background(), tc.inputUserID, tc.inputPage, tc.inputPerPage)
 			if tc.expectedErrMessage == "" {
@@ -148,4 +110,51 @@ func TestClient_GetUserItems(t *testing.T) {
 			}
 		})
 	}
+}
+
+func setup(t *testing.T, mockResponseHeaderFile, mockResponseBodyFile string, expectedMethod, expectedRequestPath, expectedRawQuery string) (*Client, func()) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if req.Method != expectedMethod {
+			t.Fatalf("request method wrong. want=%s, got=%s", expectedMethod, req.Method)
+		}
+		if req.URL.Path != expectedRequestPath {
+			t.Fatalf("request path wrong. want=%s, got=%s", expectedRequestPath, req.URL.Path)
+		}
+		if req.URL.RawQuery != expectedRawQuery {
+			t.Fatalf("request query wrong. want=%s, got=%s", expectedRawQuery, req.URL.RawQuery)
+		}
+
+		headerBytes, err := ioutil.ReadFile(mockResponseHeaderFile)
+		if err != nil {
+			t.Fatalf("failed to read header '%s': %s", mockResponseHeaderFile, err.Error())
+		}
+		firstLine := strings.Split(string(headerBytes), "\n")[0]
+		statusCode, err := strconv.Atoi(strings.Fields(firstLine)[1])
+		if err != nil {
+			t.Fatalf("failed to extract status code from header: %s", err.Error())
+		}
+		w.WriteHeader(statusCode)
+
+		bodyBytes, err := ioutil.ReadFile(mockResponseBodyFile)
+		if err != nil {
+			t.Fatalf("failed to read body '%s': %s", mockResponseBodyFile, err.Error())
+		}
+		w.Write(bodyBytes)
+	}))
+
+	serverURL, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatalf("failed to get mock server URL: %s", err.Error())
+	}
+
+	cli := &Client{
+		BaseURL:    serverURL,
+		HTTPClient: server.Client(),
+		Logger:     nil,
+	}
+	teardown := func() {
+		server.Close()
+	}
+
+	return cli, teardown
 }
