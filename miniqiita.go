@@ -1,6 +1,7 @@
 package miniqiita
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"net/url"
@@ -30,4 +31,14 @@ func New(rawBaseURL, token string, logger *log.Logger) (*Client, error) {
 		Token:      token,
 		Logger:     logger,
 	}, nil
+}
+
+type Item struct {
+	ID         string `json:"id"`
+	Title      string `json:"title"`
+	LikesCount int    `json:"likes_count"`
+}
+
+func (c *Client) GetUserItems(ctx context.Context, userID string, page, perPage int) ([]*Item, error) {
+	return nil, nil
 }
