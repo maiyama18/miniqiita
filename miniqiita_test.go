@@ -27,7 +27,57 @@ func TestClient_GetUserItems(t *testing.T) {
 		expectedRawQuery    string
 		expectedItems       []*Item
 		expectedErrMessage  string
-	}{}
+	}{
+		{
+			name: "success",
+
+			inputUserID:  "yaotti",
+			inputPage:    2,
+			inputPerPage: 3,
+
+			mockResponseHeaderFile: "testdata/GetUserItems/success-header",
+			mockResponseBodyFile:   "testdata/GetUserItems/success-body",
+
+			expectedMethod:      http.MethodGet,
+			expectedRequestPath: "/users/yaotti/items",
+			expectedRawQuery:    "page=2&per_page=3",
+			expectedItems: []*Item{
+				{ID: "f6c78c01ee8c988a9f7a", Title: "RDSで`Mysql2::Error: Incorrect key file for table '/rdsdbdata/tmp/...'; try to repair it`というエラーに対応する", LikesCount: 9},
+				{ID: "157ff0a46736ec793a91", Title: "ディレクトリ移動を手軽にするauto cdとcdpath", LikesCount: 73},
+				{ID: "5b70c9f9d882f6f10023", Title: "ある程度Gitを操作できるようになってから当たると良いマニュアル/情報源", LikesCount: 302},
+			},
+		},
+		{
+			name: "failure-page_out_of_range",
+
+			inputUserID:  "yaotti",
+			inputPage:    101,
+			inputPerPage: 3,
+
+			mockResponseHeaderFile: "testdata/GetUserItems/page_out_of_range-header",
+			mockResponseBodyFile:   "testdata/GetUserItems/page_out_of_range-body",
+
+			expectedMethod:      http.MethodGet,
+			expectedRequestPath: "/users/yaotti/items",
+			expectedRawQuery:    "page=101&per_page=3",
+			expectedErrMessage:  "bad request",
+		},
+		{
+			name: "failure-user_not_exist",
+
+			inputUserID:  "nonexistent",
+			inputPage:    2,
+			inputPerPage: 3,
+
+			mockResponseHeaderFile: "testdata/GetUserItems/user_not_exist-header",
+			mockResponseBodyFile:   "testdata/GetUserItems/user_not_exist-body",
+
+			expectedMethod:      http.MethodGet,
+			expectedRequestPath: "/users/nonexistent/items",
+			expectedRawQuery:    "page=2&per_page=3",
+			expectedErrMessage:  "not found",
+		},
+	}
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {

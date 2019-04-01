@@ -1,0 +1,24 @@
+HTTP/1.1 200 OK
+Date: Mon, 01 Apr 2019 13:01:53 GMT
+Content-Type: application/json; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Server: nginx
+X-Frame-Options: SAMEORIGIN
+X-XSS-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+X-Download-Options: noopen
+X-Permitted-Cross-Domain-Policies: none
+Referrer-Policy: strict-origin-when-cross-origin
+Link: <https://qiita.com/api/v2/users/yaotti/items?page=1&per_page=3>; rel="first", <https://qiita.com/api/v2/users/yaotti/items?page=1&per_page=3>; rel="prev", <https://qiita.com/api/v2/users/yaotti/items?page=3&per_page=3>; rel="next", <https://qiita.com/api/v2/users/yaotti/items?page=51&per_page=3>; rel="last"
+Total-Count: 151
+ETag: W/"b1f2b3a70c037376d7e7ab53aa5c056f"
+Cache-Control: max-age=0, private, must-revalidate
+Rate-Limit: 60
+Rate-Remaining: 56
+Rate-Reset: 1554126298
+Vary: Origin
+X-Runtime: 0.102692
+Strict-Transport-Security: max-age=2592000
+X-Request-Id: e26d5010-6034-4437-8fbc-652b7d561d59
+
