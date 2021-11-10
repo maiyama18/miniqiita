@@ -87,7 +87,7 @@ func (c *Client) newRequest(ctx context.Context, method, relativePath string, qu
 	}
 
 	// instantiate request
-	req, err := http.NewRequest(method, reqURL.String(), reqBody)
+	req, err := http.NewRequestWithContext(ctx, method, reqURL.String(), reqBody)
 	if err != nil {
 		return nil, err
 	}
@@ -101,9 +101,6 @@ func (c *Client) newRequest(ctx context.Context, method, relativePath string, qu
 			req.Header.Set(k, v)
 		}
 	}
-
-	// set context
-	req = req.WithContext(ctx)
 
 	return req, nil
 }
