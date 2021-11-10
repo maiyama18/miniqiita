@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -74,10 +73,8 @@ func (c *Client) GetUserItems(ctx context.Context, userID string, page, perPage 
 }
 
 func (c *Client) newRequest(ctx context.Context, method, relativePath string, queries, headers map[string]string, reqBody io.Reader) (*http.Request, error) {
-	reqURL := *c.BaseURL
-
 	// set path
-	reqURL.Path = path.Join(reqURL.Path, relativePath)
+	reqURL, err := c.BaseURL.Parse(relativePath)
 
 	// set query
 	if queries != nil {
@@ -89,7 +86,7 @@ func (c *Client) newRequest(ctx context.Context, method, relativePath string, qu
 	}
 
 	// instantiate request
-	req, err := http.NewRequest(method, reqURL.String(), reqBody)
+	req, err := http.NewRequestWithContext(ctx, method, reqURL.String(), reqBody)
 	if err != nil {
 		return nil, err
 	}
@@ -103,9 +100,6 @@ func (c *Client) newRequest(ctx context.Context, method, relativePath string, qu
 			req.Header.Set(k, v)
 		}
 	}
-
-	// set context
-	req = req.WithContext(ctx)
 
 	return req, nil
 }
@@ -121,12 +115,7 @@ func (c *Client) doRequest(req *http.Request, respBody interface{}) (int, error)
 		return resp.StatusCode, nil
 	}
 
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
-	}
-
-	if err := json.Unmarshal(bodyBytes, respBody); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(respBody); err != nil {
 		return 0, err
 	}
 
