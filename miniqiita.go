@@ -74,10 +74,8 @@ func (c *Client) GetUserItems(ctx context.Context, userID string, page, perPage 
 }
 
 func (c *Client) newRequest(ctx context.Context, method, relativePath string, queries, headers map[string]string, reqBody io.Reader) (*http.Request, error) {
-	reqURL := *c.BaseURL
-
 	// set path
-	reqURL.Path = path.Join(reqURL.Path, relativePath)
+	reqURL, err := c.BaseURL.Parse(relativePath)
 
 	// set query
 	if queries != nil {
