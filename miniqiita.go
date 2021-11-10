@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -116,12 +115,7 @@ func (c *Client) doRequest(req *http.Request, respBody interface{}) (int, error)
 		return resp.StatusCode, nil
 	}
 
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
-	}
-
-	if err := json.Unmarshal(bodyBytes, respBody); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(respBody); err != nil {
 		return 0, err
 	}
 
